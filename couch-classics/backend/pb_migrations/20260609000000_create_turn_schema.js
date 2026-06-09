@@ -28,11 +28,11 @@ migrate((app) => {
   const matches = new Collection({
     type: "base",
     name: "matches",
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
+    listRule: "@request.auth.id != '' && players.id ?= @request.auth.id",
+    viewRule: "@request.auth.id != '' && players.id ?= @request.auth.id",
     createRule: "@request.auth.id != ''",
-    updateRule: "@request.auth.id != ''",
-    deleteRule: "@request.auth.id != ''",
+    updateRule: null,
+    deleteRule: "@request.auth.id != '' && created_by.id = @request.auth.id",
     fields: [
       { type: "text", name: "game_id", required: true, max: 80 },
       { type: "relation", name: "players", required: true, collectionId: users.id, minSelect: 1, maxSelect: 2 },
@@ -51,9 +51,9 @@ migrate((app) => {
   const moves = new Collection({
     type: "base",
     name: "moves",
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
-    createRule: "@request.auth.id != ''",
+    listRule: "@request.auth.id != '' && match.players.id ?= @request.auth.id",
+    viewRule: "@request.auth.id != '' && match.players.id ?= @request.auth.id",
+    createRule: "@request.auth.id != '' && @request.body.player = @request.auth.id && match.players.id ?= @request.auth.id && match.current_turn.id = @request.auth.id && match.status = 'active'",
     updateRule: null,
     deleteRule: null,
     fields: [
@@ -73,8 +73,8 @@ migrate((app) => {
   const notificationStubs = new Collection({
     type: "base",
     name: "notification_stubs",
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
+    listRule: "@request.auth.id != '' && user.id = @request.auth.id",
+    viewRule: "@request.auth.id != '' && user.id = @request.auth.id",
     createRule: null,
     updateRule: null,
     deleteRule: null,

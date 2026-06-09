@@ -55,9 +55,14 @@ PocketBase provides:
 - `notification_stubs`: local records representing future push notifications.
 
 The `moves` hook updates the parent match and writes a notification stub for the
-next player. PocketBase realtime can subscribe to `matches` and `moves`; the
-Godot web client still needs a browser SSE bridge or polling adapter before
-network play is enabled in the shell.
+next player. Direct client updates to `matches` are locked; clients append moves
+and then refetch the match record updated by the hook.
+
+The Godot client currently uses REST calls for auth, match listing, match
+creation, and move submission. Realtime is still represented as a seam:
+PocketBase can subscribe to `matches` and `moves`, but the Godot web client will
+need a browser SSE bridge, polling adapter, or native plugin before passive turn
+notifications update the open screen automatically.
 
 ## Export Strategy
 

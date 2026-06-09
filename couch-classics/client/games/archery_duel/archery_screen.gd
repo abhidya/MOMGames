@@ -146,7 +146,7 @@ func _fire() -> void:
   var model = GameState.active_match
   if model == null:
     return
-  var result = GameState.apply_hotseat_move({
+  var result = await GameState.apply_move({
     "player_id": model.current_turn,
     "angle": angle_slider.value,
     "power": power_slider.value

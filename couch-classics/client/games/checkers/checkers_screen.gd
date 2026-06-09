@@ -91,7 +91,7 @@ func _on_square_pressed(row: int, col: int) -> void:
     "from": selected_square,
     "to": [row, col]
   }
-  var result = GameState.apply_hotseat_move(move)
+  var result = await GameState.apply_move(move)
   selected_square = []
   if not bool(result.get("ok", false)):
     error_label.text = String(result.get("error", "Move failed."))

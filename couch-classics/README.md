@@ -25,6 +25,8 @@ Run from the repository root:
 ```bash
 just doctor
 just test-engine
+just test-backend
+just test-network
 just run-client
 just run-backend
 just build-web
@@ -42,6 +44,11 @@ Android uses the local Godot debug keystore for `just build-android`. iOS is
 exported as project files only; replace the placeholder Team ID in
 `client/export_presets.cfg` with a real Apple Developer Team ID before signing
 for TestFlight.
+
+For local online-play testing, run PocketBase with `just run-backend`, open the
+Godot client, sign in as Alice or Bob from Settings, then start a new game with
+the other user's handle (`alice` or `bob`) in the friend-handle field. The
+client also keeps hotseat mode available when the field is blank.
 
 Playable hotseat games:
 
