@@ -1,0 +1,26 @@
+# Godot/editor cache
+**/.godot/
+**/*.import
+**/*.uid
+
+# Exports and local build output
+couch-classics/build/
+couch-classics/client/.export/
+couch-classics/client/exported/
+
+# PocketBase local data
+couch-classics/backend/pb_data/
+couch-classics/backend/pb_public/
+
+# OMX/session runtime state
+.omx/
+
+# OS/editor noise
+.DS_Store
+.idea/
+.vscode/
+
+# Logs and temporary files
+*.log
+tmp/
+temp/

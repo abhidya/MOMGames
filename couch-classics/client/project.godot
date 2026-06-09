@@ -1,0 +1,26 @@
+config_version=5
+
+[application]
+
+config/name="Couch Classics"
+run/main_scene="res://ui/app_shell.tscn"
+config/features=PackedStringArray("4.6", "Mobile")
+config/icon="res://assets/icon.svg"
+
+[autoload]
+
+GameState="*res://autoload/game_state.gd"
+Net="*res://autoload/net.gd"
+AudioHub="*res://autoload/audio_hub.gd"
+ThemeTokens="*res://autoload/theme_tokens.gd"
+
+[display]
+
+window/size/viewport_width=430
+window/size/viewport_height=932
+window/handheld/orientation=1
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
