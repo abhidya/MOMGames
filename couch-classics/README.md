@@ -28,7 +28,20 @@ just test-engine
 just run-client
 just run-backend
 just build-web
+just build-android
+just build-ios
 ```
+
+Exports are written to ignored local build folders:
+
+- Web: `build/web/`
+- Android debug APK: `build/android/couch-classics-debug.apk`
+- iOS Xcode project archive: `build/ios/couch-classics-xcode.zip`
+
+Android uses the local Godot debug keystore for `just build-android`. iOS is
+exported as project files only; replace the placeholder Team ID in
+`client/export_presets.cfg` with a real Apple Developer Team ID before signing
+for TestFlight.
 
 Playable hotseat games:
 

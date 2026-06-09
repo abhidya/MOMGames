@@ -61,7 +61,15 @@ network play is enabled in the shell.
 
 ## Export Strategy
 
-Web is first. Godot 4 web exports require the Compatibility renderer and a host
-that supports cross-origin isolation headers when threaded templates are used.
-Android and iOS exports are configured as follow-on targets, with signing left
-outside automation.
+Web is first. The project uses the Compatibility renderer and the no-threaded
+web template so the generated `build/web/` folder can be served by a simple
+static host without cross-origin isolation headers.
+
+Android exports produce a local signed debug APK at
+`build/android/couch-classics-debug.apk`. The release signing key is intentionally
+not stored in the repository.
+
+iOS exports produce a zipped Xcode project at
+`build/ios/couch-classics-xcode.zip`. The preset uses a placeholder Apple Team
+ID only to make project-file export deterministic; real TestFlight signing still
+requires Apple Developer credentials in Xcode.
