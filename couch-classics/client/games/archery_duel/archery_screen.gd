@@ -57,13 +57,13 @@ func _build() -> void:
   detail_label.add_theme_color_override("font_color", ThemeTokens.INK)
   field.add_child(detail_label)
 
-  _add_slider(outer, "Angle", 15, 75, 45)
-  angle_slider = outer.get_child(outer.get_child_count() - 1).get_node("Slider")
-  angle_value = outer.get_child(outer.get_child_count() - 1).get_node("Value")
+  var angle_controls := _add_slider(outer, "Angle", 15, 75, 45)
+  angle_slider = angle_controls["slider"]
+  angle_value = angle_controls["value"]
 
-  _add_slider(outer, "Power", 18, 42, 31)
-  power_slider = outer.get_child(outer.get_child_count() - 1).get_node("Slider")
-  power_value = outer.get_child(outer.get_child_count() - 1).get_node("Value")
+  var power_controls := _add_slider(outer, "Power", 18, 42, 31)
+  power_slider = power_controls["slider"]
+  power_value = power_controls["value"]
 
   angle_slider.value_changed.connect(func(_value): _render_controls())
   power_slider.value_changed.connect(func(_value): _render_controls())
@@ -94,7 +94,7 @@ func _build() -> void:
   history_label.add_theme_color_override("font_color", ThemeTokens.SLATE)
   outer.add_child(history_label)
 
-func _add_slider(parent: VBoxContainer, label_text: String, min_value: float, max_value: float, default_value: float) -> void:
+func _add_slider(parent: VBoxContainer, label_text: String, min_value: float, max_value: float, default_value: float) -> Dictionary:
   var panel := PanelContainer.new()
   panel.name = label_text + "Panel"
   panel.add_theme_stylebox_override("panel", ThemeTokens.panel_style(ThemeTokens.PANEL, Color("#d7ccb8"), 16))
@@ -124,6 +124,7 @@ func _add_slider(parent: VBoxContainer, label_text: String, min_value: float, ma
   value.custom_minimum_size = Vector2(42, 32)
   value.add_theme_color_override("font_color", ThemeTokens.INK)
   row.add_child(value)
+  return {"slider": slider, "value": value}
 
 func _on_match_changed(_model) -> void:
   _sync_suggestion()

@@ -10,10 +10,11 @@ var title_label: Label
 var subtitle_label: Label
 var feedback_label: Label
 var selected_game_id := "checkers"
+var current_view := "match_list"
 
 func _ready() -> void:
   _build_shell()
-  GameState.matches_changed.connect(_show_match_list)
+  GameState.matches_changed.connect(_on_matches_changed)
   GameState.network_status_changed.connect(func(message: String): _set_feedback(message, true))
   GameState.ensure_demo_match()
   _show_match_list()
@@ -71,9 +72,14 @@ func _clear_body() -> void:
   for child in body.get_children():
     child.queue_free()
 
+func _on_matches_changed() -> void:
+  if current_view == "match_list":
+    _show_match_list()
+
 func _show_match_list() -> void:
   if body == null:
     return
+  current_view = "match_list"
   _clear_body()
   subtitle_label.text = "Your active turns"
 
@@ -138,6 +144,7 @@ func _match_card(model) -> Control:
   return card
 
 func _show_new_game() -> void:
+  current_view = "new_game"
   _clear_body()
   subtitle_label.text = "Pick a game and invite a friend"
 
@@ -193,6 +200,7 @@ func _show_new_game() -> void:
   body.add_child(back)
 
 func _show_game(model) -> void:
+  current_view = "game"
   _clear_body()
   subtitle_label.text = "Hotseat mode" if _is_local_match(model) else "Online match"
   if model == null:
@@ -221,6 +229,7 @@ func _show_game(model) -> void:
     body.add_child(screen)
 
 func _show_settings() -> void:
+  current_view = "settings"
   _clear_body()
   subtitle_label.text = "Account and backend"
 
