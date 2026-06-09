@@ -6,6 +6,8 @@ signal active_match_changed(match_model)
 const MatchEngineScript := preload("res://core/match_engine.gd")
 const MatchModelScript := preload("res://core/match_model.gd")
 const CheckersModuleScript := preload("res://games/checkers/checkers_module.gd")
+const ArcheryModuleScript := preload("res://games/archery_duel/archery_module.gd")
+const ArtilleryModuleScript := preload("res://games/artillery_duel/artillery_module.gd")
 
 var engine = MatchEngineScript.new()
 var modules: Dictionary = {}
@@ -20,17 +22,15 @@ func _ready() -> void:
     "tagline": "Classic diagonal tactics",
     "playable": true
   })
-  game_catalog.append({
-    "id": "archery_duel",
+  register_module("archery_duel", ArcheryModuleScript.new(), {
     "title": "Archery Duel",
     "tagline": "Aim, power, and one clean shot",
-    "playable": false
+    "playable": true
   })
-  game_catalog.append({
-    "id": "artillery_duel",
+  register_module("artillery_duel", ArtilleryModuleScript.new(), {
     "title": "Artillery Duel",
     "tagline": "Wind, terrain, and turn-based arcs",
-    "playable": false
+    "playable": true
   })
 
 func register_module(game_id: String, module, meta: Dictionary) -> void:

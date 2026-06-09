@@ -1,6 +1,8 @@
 extends Control
 
 const CheckersScreenScene := preload("res://games/checkers/checkers_screen.tscn")
+const ArcheryScreenScene := preload("res://games/archery_duel/archery_screen.tscn")
+const ArtilleryScreenScene := preload("res://games/artillery_duel/artillery_screen.tscn")
 
 var body: VBoxContainer
 var title_label: Label
@@ -188,6 +190,16 @@ func _show_game(model) -> void:
     screen.size_flags_vertical = Control.SIZE_EXPAND_FILL
     screen.back_requested.connect(_show_match_list)
     body.add_child(screen)
+  elif model.game_id == "archery_duel":
+    var screen := ArcheryScreenScene.instantiate()
+    screen.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    screen.back_requested.connect(_show_match_list)
+    body.add_child(screen)
+  elif model.game_id == "artillery_duel":
+    var screen := ArtilleryScreenScene.instantiate()
+    screen.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    screen.back_requested.connect(_show_match_list)
+    body.add_child(screen)
 
 func _show_settings() -> void:
   _clear_body()
@@ -207,7 +219,7 @@ func _show_settings() -> void:
   box.add_child(backend)
 
   var note := Label.new()
-  note.text = "Network play is scaffolded. Hotseat is the active vertical slice."
+  note.text = "Network play is scaffolded. Hotseat is playable for the current game set."
   note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
   note.add_theme_color_override("font_color", ThemeTokens.SLATE)
   box.add_child(note)

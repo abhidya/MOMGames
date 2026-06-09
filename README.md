@@ -94,9 +94,9 @@ first build, and rebuilds before the roughly 90 day beta expiration window.
 - Local hotseat mode with no backend dependency.
 - Mobile portrait app shell: match list, new game flow, game host, settings
   stub, and polished theme tokens.
-- Checkers implemented as the first proof of the engine. It supports normal
-  diagonal moves, captures, kings, forced captures, turn switching, JSON
-  round-tripping, and terminal detection.
+- Three original hotseat proof games: Checkers, Archery Duel, and Artillery
+  Duel. They run through the same JSON match engine and support turn switching,
+  terminal detection, and JSON round-tripping.
 
 ## Reference Boundary
 
@@ -106,9 +106,7 @@ OpenPigeon source or assets were copied into this repository.
 
 ## Next Steps
 
-1. Write specs for Archery Duel and Artillery Duel in `docs/` using
-   `GAME_SPEC_TEMPLATE.md`, then get sign-off before implementation.
-2. Replace placeholder UI shapes with final original art, fonts, and audio.
-3. Add authenticated PocketBase flows in the Godot shell.
-4. Add a browser realtime bridge or polling adapter for web turn notifications.
-5. Harden export presets with Android signing and iOS Xcode project settings.
+1. Replace placeholder UI shapes with final original art, fonts, and audio.
+2. Add authenticated PocketBase flows in the Godot shell.
+3. Add a browser realtime bridge or polling adapter for web turn notifications.
+4. Harden export presets with Android signing and iOS Xcode project settings.

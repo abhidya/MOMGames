@@ -22,6 +22,7 @@ run-client:
 
 test-engine:
   {{godot}} --headless --path {{client}} --script tests/checkers_engine_smoke.gd
+  {{godot}} --headless --path {{client}} --script tests/full_engine_smoke.gd
 
 run-backend:
   cd {{backend}} && pocketbase serve --http 127.0.0.1:8090 --dir pb_data --hooksDir pb_hooks --migrationsDir pb_migrations

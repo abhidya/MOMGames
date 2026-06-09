@@ -30,6 +30,12 @@ just run-backend
 just build-web
 ```
 
+Playable hotseat games:
+
+- Checkers
+- Archery Duel
+- Artillery Duel
+
 ## Backend Dev Accounts
 
 The seed migration creates:

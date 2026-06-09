@@ -20,7 +20,8 @@ game modules:
 - `core/GameModule`: interface every game implements.
 - `core/MatchEngine`: validates turn ownership, calls the active module, flips
   turns, and updates status/winner.
-- `games/<game_id>/`: module, screen, and game-specific helpers.
+- `games/<game_id>/`: module, screen, and game-specific helpers. Checkers,
+  Archery Duel, and Artillery Duel are currently playable in hotseat mode.
 
 ## Match State
 
