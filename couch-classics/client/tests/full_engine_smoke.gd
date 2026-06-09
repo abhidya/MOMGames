@@ -5,6 +5,7 @@ const MatchModelScript := preload("res://core/match_model.gd")
 const CheckersModuleScript := preload("res://games/checkers/checkers_module.gd")
 const ArcheryModuleScript := preload("res://games/archery_duel/archery_module.gd")
 const ArtilleryModuleScript := preload("res://games/artillery_duel/artillery_module.gd")
+const LaunchModuleScript := preload("res://games/launch_duel/launch_module.gd")
 
 var players = [
   {"id": "p1", "display_name": "Player One"},
@@ -15,6 +16,7 @@ func _init() -> void:
   _test_checkers()
   _test_archery()
   _test_artillery()
+  _test_launch()
   print("full_engine_smoke: ok")
   quit(0)
 
@@ -58,6 +60,24 @@ func _test_artillery() -> void:
   _expect(model.status == "finished", "artillery suggested shot can finish")
   _expect(model.winner == "p1", "artillery records winner")
   _round_trip(model, "artillery_duel")
+
+func _test_launch() -> void:
+  var engine = MatchEngineScript.new()
+  var module = LaunchModuleScript.new()
+  var model = engine.create_match("launch_duel", players, module)
+  while model.status != "finished":
+    var suggestion: Dictionary = module.suggested_launch(model.state)
+    var result = engine.apply_move(model, module, {
+      "player_id": model.current_turn,
+      "angle": suggestion["angle"],
+      "power": suggestion["power"]
+    })
+    _expect(bool(result.get("ok", false)), "launch accepts suggested move")
+
+  _expect(model.state.get("launches", []).size() == players.size() * 3, "launch records all rounds")
+  _expect(model.state.get("last_move", {}).has("distance"), "launch records distance")
+  _expect(model.winner != "", "launch records winner")
+  _round_trip(model, "launch_duel")
 
 func _round_trip(model, game_id: String) -> void:
   var restored = MatchModelScript.deserialize_json(model.serialize_json())

@@ -55,6 +55,7 @@ Playable hotseat games:
 - Checkers
 - Archery Duel
 - Artillery Duel
+- Launch Duel
 
 ## Backend Dev Accounts
 

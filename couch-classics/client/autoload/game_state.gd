@@ -9,6 +9,7 @@ const MatchModelScript := preload("res://core/match_model.gd")
 const CheckersModuleScript := preload("res://games/checkers/checkers_module.gd")
 const ArcheryModuleScript := preload("res://games/archery_duel/archery_module.gd")
 const ArtilleryModuleScript := preload("res://games/artillery_duel/artillery_module.gd")
+const LaunchModuleScript := preload("res://games/launch_duel/launch_module.gd")
 
 var engine = MatchEngineScript.new()
 var modules: Dictionary = {}
@@ -33,6 +34,11 @@ func _ready() -> void:
   register_module("artillery_duel", ArtilleryModuleScript.new(), {
     "title": "Artillery Duel",
     "tagline": "Wind, terrain, and turn-based arcs",
+    "playable": true
+  })
+  register_module("launch_duel", LaunchModuleScript.new(), {
+    "title": "Launch Duel",
+    "tagline": "Angle, bounce pads, and distance runs",
     "playable": true
   })
 
