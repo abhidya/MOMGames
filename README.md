@@ -61,16 +61,21 @@ just build-web
 ```
 
 The output lands in `couch-classics/build/web/` and can be hosted on any static
-host that can send the cross-origin isolation headers required by Godot 4 web
-exports. Cloudflare Pages is the recommended free option.
+host. The current recipe uses Godot's non-threaded web template, so it avoids
+SharedArrayBuffer headers for local testing. Cloudflare Pages is the recommended
+free hosting option.
 
-Android debug APK:
+Android and iOS are Phase 6 follow-ups. The `just build-android` and
+`just build-ios` tasks intentionally fail with setup instructions until signing
+and platform presets are configured.
+
+Android debug APK, after Phase 6 setup:
 
 ```bash
 just build-android
 ```
 
-iOS export:
+iOS export, after Phase 6 setup:
 
 ```bash
 just build-ios

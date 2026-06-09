@@ -34,12 +34,21 @@ seed-backend:
 
 build-web:
   mkdir -p couch-classics/build/web
-  {{godot}} --headless --path {{client}} --export-release "Web" ../build/web/index.html
+  mkdir -p couch-classics/client/exported/web
+  {{godot}} --headless --path {{client}} --export-pack "Web" exported/web/index.pck
+  rm -rf couch-classics/build/web/*
+  unzip -oq "$HOME/Library/Application Support/Godot/export_templates/4.6.3.stable/web_nothreads_release.zip" -d couch-classics/build/web
+  mv couch-classics/build/web/godot.js couch-classics/build/web/index.js
+  mv couch-classics/build/web/godot.wasm couch-classics/build/web/index.wasm
+  mv couch-classics/build/web/godot.audio.worklet.js couch-classics/build/web/index.audio.worklet.js
+  mv couch-classics/build/web/godot.audio.position.worklet.js couch-classics/build/web/index.audio.position.worklet.js
+  cp couch-classics/client/exported/web/index.pck couch-classics/build/web/index.pck
+  cp couch-classics/client/web_shell.html couch-classics/build/web/index.html
 
 build-android:
-  mkdir -p couch-classics/build/android
-  {{godot}} --headless --path {{client}} --export-debug "Android" ../build/android/couch-classics.apk
+  @echo "Android export is a Phase 6 task: add Android SDK/signing settings and an Android export preset first."
+  @exit 1
 
 build-ios:
-  mkdir -p couch-classics/build/ios
-  {{godot}} --headless --path {{client}} --export-release "iOS" ../build/ios
+  @echo "iOS export is a Phase 6 task: add Apple signing settings and an iOS export preset first."
+  @exit 1

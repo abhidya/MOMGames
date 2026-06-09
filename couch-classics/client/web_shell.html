@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Couch Classics</title>
+    <style>
+      html,
+      body,
+      #canvas {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      body {
+        overflow: hidden;
+        background: #dbeedc;
+        color: #17212b;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        touch-action: none;
+      }
+
+      #canvas {
+        display: block;
+      }
+
+      #canvas:focus {
+        outline: none;
+      }
+
+      #status {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: #dbeedc;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas">Your browser does not support canvas.</canvas>
+    <div id="status">Loading Couch Classics...</div>
+    <script src="index.js"></script>
+    <script>
+      const status = document.getElementById("status");
+      const config = {
+        executable: "index",
+        mainPack: "index.pck",
+        canvasResizePolicy: 2,
+        focusCanvas: true,
+        experimentalVK: false,
+        serviceWorker: "",
+        gdextensionLibs: [],
+        fileSizes: {},
+        args: []
+      };
+
+      const missing = Engine.getMissingFeatures({ threads: false });
+      if (missing.length > 0) {
+        status.textContent = "Missing browser features: " + missing.join(", ");
+      } else {
+        const engine = new Engine(config);
+        engine.startGame({
+          onProgress(current, total) {
+            if (total > 0) {
+              status.textContent = "Loading Couch Classics " + Math.round((current / total) * 100) + "%";
+            }
+          }
+        }).then(() => {
+          status.remove();
+        }).catch((error) => {
+          console.error(error);
+          status.textContent = error && error.message ? error.message : "Unable to start Couch Classics.";
+        });
+      }
+    </script>
+  </body>
+</html>
