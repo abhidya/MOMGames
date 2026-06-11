@@ -2,7 +2,7 @@ set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 
 godot := env_var_or_default("GODOT_BIN", "godot")
 client := "couch-classics/client"
-backend := "couch-classics/backend"
+ios := "ios"
 
 default:
   @just --list
@@ -10,7 +10,7 @@ default:
 doctor:
   @printf "%-14s %-28s %s\n" "tool" "version" "status"
   @printf "%-14s %-28s %s\n" "Godot" "$({{godot}} --version 2>/dev/null || echo missing)" "$(command -v {{godot}} >/dev/null && echo present || echo missing)"
-  @printf "%-14s %-28s %s\n" "PocketBase" "$(pocketbase --version 2>/dev/null || echo missing)" "$(command -v pocketbase >/dev/null && echo present || echo missing)"
+  @printf "%-14s %-28s %s\n" "XcodeGen" "$(xcodegen --version 2>/dev/null || echo missing)" "$(command -v xcodegen >/dev/null && echo present || echo missing)"
   @printf "%-14s %-28s %s\n" "Git" "$(git --version 2>/dev/null || echo missing)" "$(command -v git >/dev/null && echo present || echo missing)"
   @printf "%-14s %-28s %s\n" "just" "$(just --version 2>/dev/null || echo missing)" "$(command -v just >/dev/null && echo present || echo missing)"
   @printf "%-14s %-28s %s\n" "Make" "$(make --version 2>/dev/null | head -1 || echo missing)" "$(command -v make >/dev/null && echo present || echo missing)"
@@ -24,20 +24,12 @@ test-engine:
   {{godot}} --headless --path {{client}} --script tests/checkers_engine_smoke.gd
   {{godot}} --headless --path {{client}} --script tests/full_engine_smoke.gd
 
-test-backend:
-  python3 couch-classics/backend/scripts/smoke_turn_passing.py
+# iMessage app (native SwiftUI). Requires a Mac with Xcode + XcodeGen.
+ios-generate:
+  cd {{ios}} && xcodegen generate
 
-test-network:
-  python3 couch-classics/backend/scripts/run_client_network_smoke.py
-
-run-backend:
-  cd {{backend}} && pocketbase serve --http 127.0.0.1:8090 --dir pb_data --hooksDir pb_hooks --migrationsDir pb_migrations
-
-migrate-backend:
-  cd {{backend}} && pocketbase migrate up --dir pb_data --migrationsDir pb_migrations
-
-seed-backend:
-  cd {{backend}} && pocketbase migrate up --dir pb_data --migrationsDir pb_migrations
+ios-open: ios-generate
+  open {{ios}}/MOMGames.xcodeproj
 
 build-web:
   rm -rf couch-classics/build/web/*

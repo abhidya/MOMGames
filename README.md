@@ -1,8 +1,15 @@
 # MOMGames
 
-This repository contains `couch-classics/`, a Godot 4 app for asynchronous
-turn-based games with a PocketBase backend. The current slice is a mobile-first
-hotseat shell with Checkers running through the shared JSON turn engine.
+This repository contains two things:
+
+- **`ios/`** — the current direction: a native SwiftUI **iMessage app** that lets
+  two people play turn-based games inside a Messages conversation. Each turn
+  rides inside the message bubble (`MSMessage.url`), so there is **no backend and
+  no accounts**. Built only on Apple's `Messages` framework — no OpenBubbles /
+  OpenPigeon code — so the repo keeps its own license. See `ios/README.md`.
+- **`couch-classics/`** — the original Godot 4 prototype the game logic was ported
+  from. Kept for reference. The PocketBase backend has been removed; the iMessage
+  edition delivers turns peer-to-peer over Messages instead.
 
 ## Phase 0 Tooling
 
@@ -19,17 +26,16 @@ hotseat shell with Checkers running through the shared JSON turn engine.
 ## Structure
 
 ```text
-couch-classics/
+ios/                      Native iMessage app (current direction).
+  project.yml             XcodeGen project definition.
+  App/                    Minimal container app required by Apple.
+  MessagesExtension/      The iMessage extension.
+    Model/                MatchEnvelope, payload coder, game kinds.
+    Games/                Pure Swift game rules (ported from GDScript).
+    Views/                SwiftUI board + duel UIs.
+couch-classics/           Original Godot 4 prototype (reference only).
   client/                 Godot 4 project.
-    autoload/             App-wide singletons for state, backend, audio, theme.
-    core/                 Generic match model, module interface, turn engine.
-    games/                Self-contained game modules and screens.
-    ui/                   Shared shell screens and flow host.
-    assets/               Original placeholder assets only.
-    theme/                Design tokens and app style helpers.
-  backend/                PocketBase migrations, hooks, seed data.
   docs/                   Architecture, legal rules, game spec template.
-  build/                  Local export output, ignored by Git.
 ```
 
 ## Run
@@ -40,21 +46,19 @@ just test-engine
 just run-client
 ```
 
-Run the backend locally:
+Build the iMessage app (requires a Mac with Xcode and XcodeGen):
 
 ```bash
-just run-backend
+just ios-open
 ```
 
-PocketBase starts at `http://127.0.0.1:8090`. The migration extends `users`
-with `handle`/`display_name` fields and creates `matches`, `moves`, and
-`notification_stubs`; a seed migration creates local users `alice@example.test`
-and `bob@example.test` with password
-`couchclassics123`.
+This generates `ios/MOMGames.xcodeproj` and opens it in Xcode. Set your signing
+team, then run on a device or simulator and open MOM Games from the Messages app
+drawer. Full details in `ios/README.md`.
 
-## Build
+## Build (Godot reference prototype)
 
-Web export is the primary target:
+Web export of the original Godot prototype:
 
 ```bash
 just build-web

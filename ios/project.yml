@@ -1,0 +1,43 @@
+name: MOMGames
+options:
+  bundleIdPrefix: app.momgames
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    CODE_SIGN_STYLE: Automatic
+    # Set your Apple Developer Team ID here (or in Xcode's Signing & Capabilities).
+    DEVELOPMENT_TEAM: ""
+
+targets:
+  MOMGames:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.momgames.host
+        INFOPLIST_FILE: App/Info.plist
+        GENERATE_INFOPLIST_FILE: "NO"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    dependencies:
+      - target: MOMGamesMessages
+        embed: true
+
+  MOMGamesMessages:
+    type: app-extension.messages
+    platform: iOS
+    sources:
+      - path: MessagesExtension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.momgames.host.messages
+        INFOPLIST_FILE: MessagesExtension/Info.plist
+        GENERATE_INFOPLIST_FILE: "NO"
+        ASSETCATALOG_COMPILER_APPICON_NAME: "iMessage App Icon"
