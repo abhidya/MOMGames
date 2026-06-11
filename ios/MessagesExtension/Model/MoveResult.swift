@@ -11,6 +11,7 @@ struct MoveResult {
     var subcaption: String
     /// `true` when this move ends the match.
     var finished: Bool
-    /// `true` when the committing player won. Only meaningful if `finished`.
-    var committerWon: Bool
+    /// Winning seat index when `finished`, or `nil` for a draw / non-terminal
+    /// move. The controller maps the seat to a participant identifier.
+    var winnerSeat: Int?
 }

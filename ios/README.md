@@ -21,6 +21,27 @@ All game rules are pure, identity-agnostic Swift ported from the original
 GDScript modules. Player identity comes from `MSConversation` participant
 identifiers, mapped to seats by `GameController`.
 
+## Multiplayer & group chats
+
+Turns are seat-based, not a two-player toggle, so the same engine works in group
+conversations:
+
+- `MatchEnvelope` carries a `players` roster (seat order), `maxPlayers`, and
+  `turnSeat`. Turns advance `(turnSeat + 1) % maxPlayers`.
+- **Open-seat join**: while the roster is filling, the seat after the last
+  seated player is "open" — any chat member who hasn't joined can claim it by
+  taking their turn. So a match fills up as people play.
+- Each `GameKind` declares a `playerRange`. Checkers and the aiming duels are
+  `2...2` (the first two to act take the seats; everyone else spectates). **Launch
+  Duel is `2...6`** — a free-for-all where every player takes three launches and
+  the highest cumulative distance wins. For multiplayer games the creator picks
+  the player count when starting.
+
+Limitation: because there is no server, two people taking the "open seat" at the
+exact same time can fork the session (iMessage does not serialize concurrent
+inserts). This is the same trade-off as GamePigeon and is fine for casual play;
+set the player count to the number who will actually play so the roster fills.
+
 ## Architecture
 
 ```
@@ -76,6 +97,9 @@ In Xcode:
 
 - State is client-trusted (the sender computes the result), same as GamePigeon.
   That is fine for casual play; there is no server to enforce rules.
-- Identity uses per-conversation participant UUIDs, so seats are resolved on
-  first move. For 1:1 conversations this is reliable; group conversations are
-  out of scope for this slice.
+- Identity uses per-conversation participant UUIDs, so seats are resolved as
+  players take their first turn. Works in 1:1 and group conversations (see
+  Multiplayer above for the concurrency caveat).
+- The bubble shows a rendered thumbnail (`ThumbnailRenderer`) plus caption; the
+  extension renders a compact card in the input strip and the full board only
+  when expanded.

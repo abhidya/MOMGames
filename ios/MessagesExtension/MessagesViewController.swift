@@ -37,12 +37,18 @@ final class MessagesViewController: MSMessagesAppViewController {
 
     override func willBecomeActive(with conversation: MSConversation) {
         super.willBecomeActive(with: conversation)
+        controller.isCompact = presentationStyle == .compact
         controller.update(with: conversation)
     }
 
     override func didSelect(_ message: MSMessage, conversation: MSConversation) {
         super.didSelect(message, conversation: conversation)
         controller.update(with: conversation)
+    }
+
+    override func didTransition(to presentationStyle: MSMessagesAppPresentationStyle) {
+        super.didTransition(to: presentationStyle)
+        controller.isCompact = presentationStyle == .compact
     }
 
     // MARK: - Sending

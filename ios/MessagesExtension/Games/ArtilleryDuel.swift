@@ -3,7 +3,8 @@ import Foundation
 
 /// Turn-based tank artillery. First direct hit wins. Ported from
 /// `artillery_module.gd`. Terrain is deterministic, so only crater centers are
-/// stored in the payload and the height field is recomputed on both devices.
+/// stored and the height field is recomputed on both devices. Tank positions
+/// are snapshotted at setup so craters never shift the targets.
 enum ArtilleryDuel {
     static let worldWidth = 320.0
     static let gravity = 9.8
@@ -15,10 +16,17 @@ enum ArtilleryDuel {
     static let step = 0.08
 
     struct State: Codable {
+        var playerCount = 2
         var turnNumber = 1
         var wind = -2.0
+        var tanks: [Tank] = []
         var craters: [Double] = []
         var shots: [Shot] = []
+    }
+
+    struct Tank: Codable {
+        var x: Double
+        var y: Double
     }
 
     struct Shot: Codable {
@@ -31,7 +39,6 @@ enum ArtilleryDuel {
         var hit: Bool
     }
 
-    static func tankX(_ seat: Int) -> Double { seat == 0 ? 36 : 284 }
     static func direction(_ seat: Int) -> Double { seat == 0 ? 1 : -1 }
 
     static var config: DuelConfig {
@@ -40,7 +47,7 @@ enum ArtilleryDuel {
             minAngle: minAngle, maxAngle: maxAngle,
             minPower: minPower, maxPower: maxPower,
             defaultAngle: 50, defaultPower: 50,
-            initialState: { State().jsonData() },
+            initialState: { _ in initialState().jsonData() },
             wind: { $0.decoded(State.self, fallback: State()).wind },
             statusLine: { data in
                 let s = data.decoded(State.self, fallback: State())
@@ -57,8 +64,17 @@ enum ArtilleryDuel {
         )
     }
 
+    private static func initialState() -> State {
+        let base = baseTerrain()
+        let tanks = [
+            Tank(x: 36, y: terrainAt(base, 36)),
+            Tank(x: 284, y: terrainAt(base, 284))
+        ]
+        return State(tanks: tanks)
+    }
+
     private static func scene(_ data: Data, seat: Int) -> DuelScene {
-        let state = data.decoded(State.self, fallback: State())
+        let state = data.decoded(State.self, fallback: initialState())
         let terrain = terrain(craters: state.craters)
         var ground: [CGPoint] = []
         var x = 0
@@ -66,34 +82,33 @@ enum ArtilleryDuel {
             ground.append(CGPoint(x: CGFloat(x), y: CGFloat(terrain[x])))
             x += 4
         }
-        let opponent = 1 - seat
+        let opponent = state.tanks.indices.contains(1 - seat) ? state.tanks[1 - seat] : Tank(x: 284, y: 90)
+        let me = state.tanks.indices.contains(seat) ? state.tanks[seat] : Tank(x: 36, y: 90)
         let markers = [
-            DuelMarker(kind: .me, rect: CGRect(x: tankX(seat) - 4, y: terrainAt(terrain, tankX(seat)),
-                                               width: 8, height: 6)),
-            DuelMarker(kind: .opponent, rect: CGRect(x: tankX(opponent) - 4, y: terrainAt(terrain, tankX(opponent)),
-                                                     width: 8, height: 6))
+            DuelMarker(kind: .me, rect: CGRect(x: me.x - 4, y: me.y, width: 8, height: 6)),
+            DuelMarker(kind: .opponent, rect: CGRect(x: opponent.x - 4, y: opponent.y, width: 8, height: 6))
         ]
         return DuelScene(worldWidth: CGFloat(worldWidth), worldHeight: 140, ground: ground, markers: markers)
     }
 
     private static func fire(_ data: Data, seat: Int, angle: Double, power: Double) -> DuelShot {
-        var state = data.decoded(State.self, fallback: State())
+        var state = data.decoded(State.self, fallback: initialState())
         let terrain = terrain(craters: state.craters)
-        let result = simulate(terrain: terrain, seat: seat, angle: angle, power: power, wind: state.wind)
+        let origin = state.tanks.indices.contains(seat) ? state.tanks[seat] : Tank(x: 36, y: 90)
+        let result = simulate(terrain: terrain, originX: origin.x, originY: origin.y + 6,
+                              direction: direction(seat), angle: angle, power: power, wind: state.wind)
 
-        let opponent = 1 - seat
-        let ox = tankX(opponent)
-        let oy = terrainAt(terrain, ox)
-        let dx = result.impact.x - ox
-        let dy = result.impact.y - oy
+        let opponent = state.tanks.indices.contains(1 - seat) ? state.tanks[1 - seat] : Tank(x: 284, y: 90)
+        let dx = result.impact.x - opponent.x
+        let dy = result.impact.y - opponent.y
         let hit = (dx * dx + dy * dy).squareRoot() <= blastRadius
 
         state.shots.append(Shot(seat: seat, angle: round(angle * 10) / 10, power: round(power * 10) / 10,
                                 wind: state.wind, impactX: round(result.impact.x * 10) / 10,
                                 impactY: round(result.impact.y * 10) / 10, hit: hit))
         state.turnNumber += 1
-        if hit == false {
-            applyCrater(&state, x: result.impact.x)
+        if !hit {
+            state.craters.append(min(max(result.impact.x, 0), worldWidth - 1))
             state.wind = nextWind(state.turnNumber)
         }
 
@@ -105,16 +120,14 @@ enum ArtilleryDuel {
             subcaption: hit ? "" : "Opponent returns fire • wind \(windText(state.wind))",
             hit: hit,
             finished: hit,
-            committerWon: hit
+            winnerSeat: hit ? seat : nil
         )
     }
 
-    private static func simulate(terrain: [Double], seat: Int, angle: Double, power: Double, wind: Double)
-        -> (impact: CGPoint, path: [CGPoint]) {
-        let originX = tankX(seat)
-        let originY = terrainAt(terrain, originX) + 6
+    private static func simulate(terrain: [Double], originX: Double, originY: Double, direction: Double,
+                                 angle: Double, power: Double, wind: Double) -> (impact: CGPoint, path: [CGPoint]) {
         let radians = angle * .pi / 180
-        let vx = cos(radians) * power * direction(seat)
+        let vx = cos(radians) * power * direction
         let vy = sin(radians) * power
 
         var path: [CGPoint] = []
@@ -129,16 +142,11 @@ enum ArtilleryDuel {
                 return (CGPoint(x: min(max(x, 0), worldWidth), y: max(0, y)), path)
             }
             if y <= terrainAt(terrain, x) {
-                let groundY = terrainAt(terrain, x)
-                return (CGPoint(x: round(x * 10) / 10, y: round(groundY * 10) / 10), path)
+                return (CGPoint(x: round(x * 10) / 10, y: round(terrainAt(terrain, x) * 10) / 10), path)
             }
             t += step
         }
         return (CGPoint(x: round(x * 10) / 10, y: round(y * 10) / 10), path)
-    }
-
-    private static func applyCrater(_ state: inout State, x: Double) {
-        state.craters.append(min(max(x, 0), worldWidth - 1))
     }
 
     static func baseTerrain() -> [Double] {
@@ -174,9 +182,5 @@ enum ArtilleryDuel {
     private static func nextWind(_ turn: Int) -> Double {
         let pattern = [-2.0, 3.0, 0.0, -4.0, 2.0, 1.0]
         return pattern[turn % pattern.count]
-    }
-
-    private static func windText(_ wind: Double) -> String {
-        wind == 0 ? "calm" : String(format: "%+.1f", wind)
     }
 }

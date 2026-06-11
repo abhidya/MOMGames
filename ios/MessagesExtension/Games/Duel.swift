@@ -28,7 +28,8 @@ struct DuelShot {
     var subcaption: String
     var hit: Bool
     var finished: Bool
-    var committerWon: Bool
+    /// Winning seat when `finished`, else `nil`.
+    var winnerSeat: Int?
 }
 
 /// Closure-based description of a projectile duel, so a single SwiftUI view can
@@ -42,7 +43,8 @@ struct DuelConfig {
     var defaultAngle: Double
     var defaultPower: Double
 
-    var initialState: () -> Data
+    /// Builds the initial state for the given player count (baked into state).
+    var initialState: (_ playerCount: Int) -> Data
     var wind: (Data) -> Double
     var statusLine: (Data) -> String
     var history: (Data) -> [String]
@@ -70,4 +72,8 @@ extension Data {
     func decoded<T: Decodable>(_ type: T.Type, fallback: T) -> T {
         (try? JSONDecoder().decode(T.self, from: self)) ?? fallback
     }
+}
+
+func windText(_ wind: Double) -> String {
+    wind == 0 ? "calm" : String(format: "%+.1f", wind)
 }

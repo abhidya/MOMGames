@@ -6,23 +6,21 @@ struct DuelView: View {
     @ObservedObject var controller: GameController
     let envelope: MatchEnvelope
     let config: DuelConfig
-    let seat: Int
-    let isMyTurn: Bool
 
     @State private var angle: Double
     @State private var power: Double
     @State private var preview: DuelShot?
 
-    init(controller: GameController, envelope: MatchEnvelope, config: DuelConfig, seat: Int, isMyTurn: Bool) {
+    init(controller: GameController, envelope: MatchEnvelope, config: DuelConfig) {
         self.controller = controller
         self.envelope = envelope
         self.config = config
-        self.seat = seat
-        self.isMyTurn = isMyTurn
         _angle = State(initialValue: config.defaultAngle)
         _power = State(initialValue: config.defaultPower)
     }
 
+    private var seat: Int { controller.perspectiveSeat(in: envelope) }
+    private var canAct: Bool { controller.canAct(in: envelope) }
     private var scene: DuelScene { config.scene(envelope.state, seat) }
 
     var body: some View {
@@ -35,7 +33,7 @@ struct DuelView: View {
                 .frame(height: 150)
                 .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
 
-            if isMyTurn, envelope.status == .active {
+            if canAct {
                 controls
             }
 
@@ -60,7 +58,6 @@ struct DuelView: View {
                 CGPoint(x: p.x * scaleX, y: size.height - p.y * scaleY)
             }
 
-            // Ground fill.
             var ground = Path()
             if let first = scene.ground.first {
                 ground.move(to: map(CGPoint(x: first.x, y: 0)))
@@ -72,7 +69,6 @@ struct DuelView: View {
             }
             context.fill(ground, with: .color(Theme.boardDark.opacity(0.6)))
 
-            // Markers.
             for marker in scene.markers {
                 let rect = CGRect(origin: map(CGPoint(x: marker.rect.minX, y: marker.rect.maxY)),
                                   size: CGSize(width: marker.rect.width * scaleX,
@@ -80,7 +76,6 @@ struct DuelView: View {
                 context.fill(Path(roundedRect: rect, cornerRadius: 2), with: .color(color(for: marker.kind)))
             }
 
-            // Preview trajectory.
             if let preview, preview.trajectory.count > 1 {
                 var path = Path()
                 path.move(to: map(preview.trajectory[0]))
@@ -166,7 +161,7 @@ struct DuelView: View {
             caption: preview.caption,
             subcaption: preview.subcaption,
             finished: preview.finished,
-            committerWon: preview.committerWon
+            winnerSeat: preview.winnerSeat
         )
         controller.commit(result, in: envelope)
     }

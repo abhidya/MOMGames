@@ -1,8 +1,9 @@
 import CoreGraphics
 import Foundation
 
-/// Distance run with bounce pads. Each player takes a fixed number of launches;
-/// the highest cumulative distance wins. Ported from `launch_module.gd`.
+/// Free-for-all distance run with bounce pads. Each seated player takes a fixed
+/// number of launches; the highest cumulative distance wins. Ported from
+/// `launch_module.gd` and generalized to 2–6 players for group chats.
 enum LaunchDuel {
     static let gravity = 9.8
     static let worldWidth = 560.0
@@ -10,7 +11,7 @@ enum LaunchDuel {
     static let maxAngle = 70.0
     static let minPower = 20.0
     static let maxPower = 72.0
-    static let roundsToWin = 3
+    static let roundsPerPlayer = 3
 
     struct Zone { var kind: String; var x: Double; var width: Double }
 
@@ -23,6 +24,7 @@ enum LaunchDuel {
     ]
 
     struct State: Codable {
+        var playerCount = 2
         var turnNumber = 1
         var wind = 1.5
         var scores: [Double] = [0, 0]
@@ -44,15 +46,18 @@ enum LaunchDuel {
             minAngle: minAngle, maxAngle: maxAngle,
             minPower: minPower, maxPower: maxPower,
             defaultAngle: 38, defaultPower: 52,
-            initialState: { State().jsonData() },
+            initialState: { count in
+                State(playerCount: count, scores: Array(repeating: 0, count: count)).jsonData()
+            },
             wind: { $0.decoded(State.self, fallback: State()).wind },
             statusLine: { data in
                 let s = data.decoded(State.self, fallback: State())
-                let taken = s.launches.count
-                let total = 2 * roundsToWin
-                return String(format: "Run %d/%d • you %.0f m  vs  %.0f m • wind %@",
-                              min(taken + 1, total), total,
-                              s.scores.first ?? 0, s.scores.dropFirst().first ?? 0, windText(s.wind))
+                let total = s.playerCount * roundsPerPlayer
+                let scoreboard = s.scores.enumerated()
+                    .map { String(format: "P%d %.0f", $0.offset + 1, $0.element) }
+                    .joined(separator: " · ")
+                return String(format: "Launch %d/%d • %@ • wind %@",
+                              min(s.launches.count + 1, total), total, scoreboard, windText(s.wind))
             },
             history: { data in
                 data.decoded(State.self, fallback: State()).launches.suffix(4).map {
@@ -89,24 +94,20 @@ enum LaunchDuel {
 
         state.launches.append(Launch(seat: seat, angle: round(angle * 10) / 10, power: round(power * 10) / 10,
                                       wind: state.wind, distance: result.distance, bounces: result.bounces))
-        if seat < state.scores.count { state.scores[seat] += result.distance }
+        while state.scores.count <= seat { state.scores.append(0) }
+        state.scores[seat] += result.distance
         state.turnNumber += 1
 
-        let finished = state.launches.count >= 2 * roundsToWin
-        var won = false
-        if finished {
-            won = leaderSeat(state) == seat
-            // ties resolve to seat 0, matching the original.
-        } else {
-            state.wind = nextWind(state.turnNumber)
-        }
+        let finished = state.launches.count >= state.playerCount * roundsPerPlayer
+        let leader = finished ? leaderSeat(state) : nil
+        if !finished { state.wind = nextWind(state.turnNumber) }
 
         let caption = String(format: "Launch traveled %.1f m", result.distance)
         let sub: String
         if finished {
-            sub = won ? "You win the run!" : "Opponent takes the run"
+            sub = "P\((leader ?? 0) + 1) wins the run!"
         } else {
-            sub = "Opponent launches • wind \(windText(state.wind))"
+            sub = "Next launch • wind \(windText(state.wind))"
         }
         return DuelShot(
             newState: state.jsonData(),
@@ -115,7 +116,7 @@ enum LaunchDuel {
             subcaption: sub,
             hit: result.bounces > 0,
             finished: finished,
-            committerWon: won
+            winnerSeat: leader
         )
     }
 
@@ -179,9 +180,5 @@ enum LaunchDuel {
     private static func nextWind(_ turn: Int) -> Double {
         let pattern = [1.5, -2.0, 0.0, 3.0, -1.0, 2.5]
         return pattern[turn % pattern.count]
-    }
-
-    private static func windText(_ wind: Double) -> String {
-        wind == 0 ? "calm" : String(format: "%+.1f", wind)
     }
 }

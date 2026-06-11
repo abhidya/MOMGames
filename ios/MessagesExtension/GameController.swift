@@ -1,9 +1,11 @@
 import Combine
 import Foundation
 import Messages
+import UIKit
 
 /// Holds the current screen and translates committed moves into `MSMessage`
 /// payloads. Owns no networking — every turn is a message in the conversation.
+/// The seat/roster model supports 2-player and N-player (group) matches.
 final class GameController: ObservableObject {
     enum Screen {
         case picker
@@ -11,6 +13,8 @@ final class GameController: ObservableObject {
     }
 
     @Published private(set) var screen: Screen = .picker
+    /// Mirrors the host's presentation style so the UI can show a compact card.
+    @Published var isCompact: Bool = true
 
     /// Called with a ready-to-send message; the view controller inserts it.
     var onSend: ((MSMessage) -> Void)?
@@ -35,29 +39,35 @@ final class GameController: ObservableObject {
 
     // MARK: - Player view helpers
 
-    func seat(in envelope: MatchEnvelope) -> Int {
-        envelope.seat(for: localParticipantID) ?? 0
+    func canAct(in envelope: MatchEnvelope) -> Bool {
+        envelope.canAct(localParticipantID)
     }
 
-    func isMyTurn(in envelope: MatchEnvelope) -> Bool {
-        envelope.isTurn(of: localParticipantID)
+    /// Seat used to render the local player's perspective, defaulting to seat 0
+    /// for spectators so boards still draw.
+    func perspectiveSeat(in envelope: MatchEnvelope) -> Int {
+        envelope.perspectiveSeat(for: localParticipantID) ?? 0
+    }
+
+    func isSeated(in envelope: MatchEnvelope) -> Bool {
+        envelope.seatedIndex(of: localParticipantID) != nil
     }
 
     // MARK: - Actions
 
-    func startGame(_ kind: GameKind) {
+    func startGame(_ kind: GameKind, playerCount: Int) {
+        let maxPlayers = min(max(playerCount, kind.playerRange.lowerBound), kind.playerRange.upperBound)
         let state: Data
         if kind == .checkers {
-            state = (try? JSONEncoder().encode(Checkers.initialState())) ?? Data()
+            state = Checkers.initialState().jsonData()
         } else {
-            state = DuelRegistry.config(for: kind)?.initialState() ?? Data()
+            state = DuelRegistry.config(for: kind)?.initialState(maxPlayers) ?? Data()
         }
-        var players = MatchEnvelope.seats()
-        players[0] = localParticipantID
         let envelope = MatchEnvelope(
             kind: kind,
-            players: players,
-            lastMover: "",
+            players: [localParticipantID],
+            maxPlayers: maxPlayers,
+            turnSeat: 0,
             status: .active,
             winner: "",
             turnNumber: 1,
@@ -68,6 +78,10 @@ final class GameController: ObservableObject {
         onRequestExpanded?()
     }
 
+    func rematch(from envelope: MatchEnvelope) {
+        startGame(envelope.kind, playerCount: envelope.maxPlayers)
+    }
+
     func backToPicker() {
         screen = .picker
     }
@@ -75,22 +89,31 @@ final class GameController: ObservableObject {
     /// Commits a move produced by a game view and inserts the next message.
     func commit(_ result: MoveResult, in envelope: MatchEnvelope) {
         var next = envelope
-        let seat = next.seat(for: localParticipantID) ?? 0
-        if seat < next.players.count { next.players[seat] = localParticipantID }
-        next.lastMover = localParticipantID
+
+        // Seat the local player if they are claiming an open seat.
+        let seat: Int
+        if let existing = next.seatedIndex(of: localParticipantID) {
+            seat = existing
+        } else {
+            seat = next.players.count
+            next.players.append(localParticipantID)
+        }
+        _ = seat
+
         next.turnNumber += 1
         next.state = result.state
+
         if result.finished {
             next.status = .finished
-            if result.committerWon {
-                next.winner = localParticipantID
-            } else {
-                let opponentSeat = 1 - seat
-                next.winner = next.players.indices.contains(opponentSeat) ? next.players[opponentSeat] : ""
+            if let winnerSeat = result.winnerSeat, next.players.indices.contains(winnerSeat) {
+                next.winner = next.players[winnerSeat]
             }
+        } else {
+            next.turnSeat = (next.turnSeat + 1) % next.maxPlayers
         }
 
         let layout = MSMessageTemplateLayout()
+        layout.image = ThumbnailRenderer.image(for: next, caption: result.caption)
         layout.caption = result.caption
         if !result.subcaption.isEmpty { layout.subcaption = result.subcaption }
         layout.trailingCaption = envelope.kind.title

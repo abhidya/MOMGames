@@ -5,13 +5,16 @@ import Foundation
 /// bubble updates in place in the Messages thread.
 ///
 /// Player identity comes from `MSConversation` participant identifiers (opaque,
-/// per-conversation UUIDs). `players[0]` is the match creator, `players[1]` the
-/// opponent; an empty slot means that seat has not made a move yet.
+/// per-conversation UUIDs). `players` is the roster in seat order; it grows as
+/// people take their first turn, up to `maxPlayers`. `turnSeat` is the seat
+/// expected to act next.
 struct MatchEnvelope: Codable, Equatable {
     var kind: GameKind
     var players: [String]
-    var lastMover: String
+    var maxPlayers: Int
+    var turnSeat: Int
     var status: Status
+    /// Participant identifier of the winner, or "" while unresolved.
     var winner: String
     var turnNumber: Int
     /// Game-specific state, JSON-encoded by the owning game type.
@@ -22,19 +25,43 @@ struct MatchEnvelope: Codable, Equatable {
         case finished
     }
 
-    static func seats() -> [String] { ["", ""] }
+    // MARK: - Seats & turns
 
-    /// The seat index for a participant, or the first open seat if they have
-    /// not been seated yet. Returns `nil` only when the board is full of other
-    /// players (should not happen in a 1:1 conversation).
-    func seat(for participantID: String) -> Int? {
-        if let existing = players.firstIndex(of: participantID) {
-            return existing
-        }
-        return players.firstIndex(of: "")
+    func seatedIndex(of participantID: String) -> Int? {
+        players.firstIndex(of: participantID)
     }
 
-    func isTurn(of participantID: String) -> Bool {
-        status == .active && lastMover != participantID
+    /// `true` when `turnSeat` points at an unfilled seat that a new participant
+    /// may claim by acting.
+    var isOpenSeat: Bool {
+        turnSeat == players.count && players.count < maxPlayers
+    }
+
+    /// Whether the given participant may act on this snapshot — either it is
+    /// their seated turn, or they can claim the open seat.
+    func canAct(_ participantID: String) -> Bool {
+        guard status == .active else { return false }
+        if turnSeat < players.count {
+            return players[turnSeat] == participantID
+        }
+        return isOpenSeat && !players.contains(participantID)
+    }
+
+    /// The seat the participant would occupy if they acted now, or `nil`.
+    func actingSeat(for participantID: String) -> Int? {
+        guard canAct(participantID) else { return nil }
+        return seatedIndex(of: participantID) ?? players.count
+    }
+
+    /// The seat used to render a participant's perspective, even when it is not
+    /// their turn (their existing seat, or the seat they would claim).
+    func perspectiveSeat(for participantID: String) -> Int? {
+        if let seated = seatedIndex(of: participantID) { return seated }
+        return isOpenSeat ? players.count : nil
+    }
+
+    func winnerSeat() -> Int? {
+        guard !winner.isEmpty else { return nil }
+        return players.firstIndex(of: winner)
     }
 }

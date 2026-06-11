@@ -25,7 +25,7 @@ enum GameKind: String, Codable, CaseIterable, Identifiable {
         case .checkers: return "Classic diagonal tactics"
         case .archery: return "Aim, power, and one clean shot"
         case .artillery: return "Wind, terrain, and turn-based arcs"
-        case .launch: return "Angle, bounce pads, and distance runs"
+        case .launch: return "Free-for-all distance run"
         }
     }
 
@@ -38,7 +38,17 @@ enum GameKind: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    /// Games where players accumulate over several rounds use a different turn
-    /// banner than first-to-finish games.
-    var isDuel: Bool { self != .checkers }
+    /// Supported number of players. Two-player games seat the first two people
+    /// who act in a group and treat everyone else as spectators; games whose
+    /// range goes above two can fill more seats as people join.
+    var playerRange: ClosedRange<Int> {
+        switch self {
+        case .checkers: return 2...2
+        case .archery: return 2...2
+        case .artillery: return 2...2
+        case .launch: return 2...6
+        }
+    }
+
+    var supportsGroup: Bool { playerRange.upperBound > 2 }
 }

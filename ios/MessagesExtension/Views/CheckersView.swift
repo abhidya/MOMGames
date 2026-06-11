@@ -3,8 +3,6 @@ import SwiftUI
 struct CheckersView: View {
     @ObservedObject var controller: GameController
     let envelope: MatchEnvelope
-    let seat: Int
-    let isMyTurn: Bool
 
     @State private var selected: Square?
 
@@ -14,7 +12,9 @@ struct CheckersView: View {
         envelope.state.decoded(Checkers.State.self, fallback: Checkers.initialState())
     }
 
+    private var seat: Int { controller.perspectiveSeat(in: envelope) }
     private var side: Checkers.Side { Checkers.Side.forSeat(seat) }
+    private var canAct: Bool { controller.canAct(in: envelope) }
 
     private var destinations: [Square] {
         guard let selected else { return [] }
@@ -92,7 +92,7 @@ struct CheckersView: View {
     // MARK: - Interaction
 
     private func tap(row: Int, col: Int) {
-        guard isMyTurn, envelope.status == .active else { return }
+        guard canAct else { return }
         let target = Square(row: row, col: col)
 
         if selected != nil, destinations.contains(target) {
@@ -118,7 +118,7 @@ struct CheckersView: View {
 
         let caption: String
         if defeated {
-            caption = "Checkmate — you cleared the board!"
+            caption = "Checkmate — cleared the board!"
         } else if captured {
             caption = "Captured a piece"
         } else {
@@ -129,7 +129,7 @@ struct CheckersView: View {
             caption: caption,
             subcaption: defeated ? "" : "Your move, opponent",
             finished: defeated,
-            committerWon: defeated
+            winnerSeat: defeated ? seat : nil
         )
         controller.commit(result, in: envelope)
     }

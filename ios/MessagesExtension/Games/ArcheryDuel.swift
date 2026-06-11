@@ -2,7 +2,8 @@ import CoreGraphics
 import Foundation
 
 /// First archer to land inside the target ring wins. Ported from
-/// `archery_module.gd`.
+/// `archery_module.gd`. Works as a 2-player duel today; the race-to-hit rule
+/// would extend to more players unchanged.
 enum ArcheryDuel {
     static let gravity = 9.8
     static let minAngle = 15.0
@@ -13,6 +14,7 @@ enum ArcheryDuel {
     static let hitRadius = 6.0
 
     struct State: Codable {
+        var playerCount = 2
         var turnNumber = 1
         var wind = 0.0
         var shots: [Shot] = []
@@ -34,7 +36,7 @@ enum ArcheryDuel {
             minAngle: minAngle, maxAngle: maxAngle,
             minPower: minPower, maxPower: maxPower,
             defaultAngle: 45, defaultPower: 30,
-            initialState: { State().jsonData() },
+            initialState: { count in State(playerCount: count).jsonData() },
             wind: { $0.decoded(State.self, fallback: State()).wind },
             statusLine: { data in
                 let s = data.decoded(State.self, fallback: State())
@@ -53,16 +55,16 @@ enum ArcheryDuel {
     }
 
     private static func scene() -> DuelScene {
-        let width: CGFloat = 120
-        let height: CGFloat = 60
+        let width: CGFloat = 200
+        let height: CGFloat = 70
         return DuelScene(
             worldWidth: width,
             worldHeight: height,
             ground: [CGPoint(x: 0, y: 0), CGPoint(x: width, y: 0)],
             markers: [
-                DuelMarker(kind: .me, rect: CGRect(x: 0, y: 0, width: 3, height: 6)),
+                DuelMarker(kind: .me, rect: CGRect(x: 0, y: 0, width: 4, height: 8)),
                 DuelMarker(kind: .target, rect: CGRect(x: targetDistance - hitRadius, y: 0,
-                                                       width: hitRadius * 2, height: 10))
+                                                       width: hitRadius * 2, height: 12))
             ]
         )
     }
@@ -74,10 +76,9 @@ enum ArcheryDuel {
         let miss = distance - targetDistance
         let hit = abs(miss) <= hitRadius
 
-        let shot = Shot(seat: seat, angle: round(angle * 10) / 10, power: round(power * 10) / 10,
-                        wind: wind, distance: round(distance * 10) / 10,
-                        miss: round(miss * 10) / 10, hit: hit)
-        state.shots.append(shot)
+        state.shots.append(Shot(seat: seat, angle: round(angle * 10) / 10, power: round(power * 10) / 10,
+                                wind: wind, distance: round(distance * 10) / 10,
+                                miss: round(miss * 10) / 10, hit: hit))
         state.turnNumber += 1
         if !hit { state.wind = nextWind(state.turnNumber) }
 
@@ -88,10 +89,10 @@ enum ArcheryDuel {
             newState: state.jsonData(),
             trajectory: trajectory(distance: distance),
             caption: caption,
-            subcaption: hit ? "" : "Your opponent shoots into wind \(windText(state.wind))",
+            subcaption: hit ? "" : "Next archer shoots into wind \(windText(state.wind))",
             hit: hit,
             finished: hit,
-            committerWon: hit
+            winnerSeat: hit ? seat : nil
         )
     }
 
@@ -118,9 +119,5 @@ enum ArcheryDuel {
     private static func nextWind(_ turn: Int) -> Double {
         let pattern = [-2.0, 1.5, 0.0, 2.5, -1.0, 3.0]
         return pattern[turn % pattern.count]
-    }
-
-    private static func windText(_ wind: Double) -> String {
-        wind == 0 ? "calm" : String(format: "%+.1f", wind)
     }
 }
