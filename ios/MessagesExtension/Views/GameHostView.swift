@@ -7,15 +7,20 @@ struct GameHostView: View {
 
     private var canAct: Bool { controller.canAct(in: envelope) }
 
+    /// Karachi Coup renders its own status, roster, and rematch inside CoupView.
+    private var coupManagesChrome: Bool { envelope.kind == .coup }
+
     var body: some View {
         VStack(spacing: 12) {
             header
-            banner
-            if envelope.maxPlayers > 2 {
-                rosterLine
+            if !coupManagesChrome {
+                banner
+                if envelope.maxPlayers > 2 {
+                    rosterLine
+                }
             }
             gameBody
-            if envelope.status == .finished {
+            if envelope.status == .finished, !coupManagesChrome {
                 rematchButton
             }
             Spacer(minLength: 0)
@@ -91,6 +96,8 @@ struct GameHostView: View {
         switch envelope.kind {
         case .checkers:
             CheckersView(controller: controller, envelope: envelope)
+        case .coup:
+            CoupView(controller: controller, envelope: envelope)
         case .archery, .artillery, .launch:
             if let config = DuelRegistry.config(for: envelope.kind) {
                 DuelView(controller: controller, envelope: envelope, config: config)

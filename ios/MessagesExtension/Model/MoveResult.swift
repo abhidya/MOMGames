@@ -14,4 +14,18 @@ struct MoveResult {
     /// Winning seat index when `finished`, or `nil` for a draw / non-terminal
     /// move. The controller maps the seat to a participant identifier.
     var winnerSeat: Int?
+    /// Explicit next active seat. When `nil`, the controller round-robins
+    /// `(turnSeat + 1) % maxPlayers` (simple games). Games with response
+    /// windows or lobbies (Karachi Coup) set this directly.
+    var nextTurnSeat: Int?
+
+    init(state: Data, caption: String, subcaption: String, finished: Bool,
+         winnerSeat: Int?, nextTurnSeat: Int? = nil) {
+        self.state = state
+        self.caption = caption
+        self.subcaption = subcaption
+        self.finished = finished
+        self.winnerSeat = winnerSeat
+        self.nextTurnSeat = nextTurnSeat
+    }
 }

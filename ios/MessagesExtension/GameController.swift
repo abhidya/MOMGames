@@ -58,16 +58,22 @@ final class GameController: ObservableObject {
     func startGame(_ kind: GameKind, playerCount: Int) {
         let maxPlayers = min(max(playerCount, kind.playerRange.lowerBound), kind.playerRange.upperBound)
         let state: Data
-        if kind == .checkers {
+        switch kind {
+        case .checkers:
             state = Checkers.initialState().jsonData()
-        } else {
+        case .coup:
+            state = KarachiCoup.lobbyState(playerCount: maxPlayers).jsonData()
+        default:
             state = DuelRegistry.config(for: kind)?.initialState(maxPlayers) ?? Data()
         }
+        // Coup deals once the roster is full, so it opens in a lobby with the
+        // open seat active for joiners; other games let the creator move first.
+        let firstTurn = kind == .coup ? 1 : 0
         let envelope = MatchEnvelope(
             kind: kind,
             players: [localParticipantID],
             maxPlayers: maxPlayers,
-            turnSeat: 0,
+            turnSeat: firstTurn,
             status: .active,
             winner: "",
             turnNumber: 1,
@@ -108,6 +114,8 @@ final class GameController: ObservableObject {
             if let winnerSeat = result.winnerSeat, next.players.indices.contains(winnerSeat) {
                 next.winner = next.players[winnerSeat]
             }
+        } else if let nextSeat = result.nextTurnSeat {
+            next.turnSeat = nextSeat
         } else {
             next.turnSeat = (next.turnSeat + 1) % next.maxPlayers
         }

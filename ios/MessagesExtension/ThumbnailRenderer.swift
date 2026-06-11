@@ -72,6 +72,7 @@ enum ThumbnailRenderer {
         case .archery: return UIColor(red: 0.20, green: 0.62, blue: 0.42, alpha: 1)
         case .artillery: return UIColor(red: 0.78, green: 0.46, blue: 0.18, alpha: 1)
         case .launch: return UIColor(red: 0.26, green: 0.46, blue: 0.86, alpha: 1)
+        case .coup: return UIColor(red: 0.44, green: 0.26, blue: 0.66, alpha: 1)
         }
     }
 }

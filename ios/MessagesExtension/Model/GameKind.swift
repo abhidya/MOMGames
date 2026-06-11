@@ -8,6 +8,7 @@ enum GameKind: String, Codable, CaseIterable, Identifiable {
     case archery
     case artillery
     case launch
+    case coup
 
     var id: String { rawValue }
 
@@ -17,6 +18,7 @@ enum GameKind: String, Codable, CaseIterable, Identifiable {
         case .archery: return "Archery Duel"
         case .artillery: return "Artillery Duel"
         case .launch: return "Launch Duel"
+        case .coup: return "Karachi Coup"
         }
     }
 
@@ -26,6 +28,7 @@ enum GameKind: String, Codable, CaseIterable, Identifiable {
         case .archery: return "Aim, power, and one clean shot"
         case .artillery: return "Wind, terrain, and turn-based arcs"
         case .launch: return "Free-for-all distance run"
+        case .coup: return "Bluff, challenge, and survive"
         }
     }
 
@@ -35,6 +38,7 @@ enum GameKind: String, Codable, CaseIterable, Identifiable {
         case .archery: return "target"
         case .artillery: return "burst.fill"
         case .launch: return "paperplane.fill"
+        case .coup: return "person.3.sequence.fill"
         }
     }
 
@@ -47,6 +51,7 @@ enum GameKind: String, Codable, CaseIterable, Identifiable {
         case .archery: return 2...2
         case .artillery: return 2...2
         case .launch: return 2...6
+        case .coup: return 2...6
         }
     }
 

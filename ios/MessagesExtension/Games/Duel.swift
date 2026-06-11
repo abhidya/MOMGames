@@ -58,7 +58,7 @@ enum DuelRegistry {
         case .archery: return ArcheryDuel.config
         case .artillery: return ArtilleryDuel.config
         case .launch: return LaunchDuel.config
-        case .checkers: return nil
+        case .checkers, .coup: return nil
         }
     }
 }

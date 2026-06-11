@@ -16,6 +16,7 @@ OpenBubbles / OpenPigeon code, so the repository keeps its own license.
 | Archery Duel | `Games/ArcheryDuel.swift` | shared `Views/DuelView.swift` |
 | Artillery Duel | `Games/ArtilleryDuel.swift` | shared `Views/DuelView.swift` |
 | Launch Duel | `Games/LaunchDuel.swift` | shared `Views/DuelView.swift` |
+| Karachi Coup | `Games/KarachiCoup.swift` | `Views/CoupView.swift` |
 
 All game rules are pure, identity-agnostic Swift ported from the original
 GDScript modules. Player identity comes from `MSConversation` participant
@@ -41,6 +42,26 @@ Limitation: because there is no server, two people taking the "open seat" at the
 exact same time can fork the session (iMessage does not serialize concurrent
 inserts). This is the same trade-off as GamePigeon and is fine for casual play;
 set the player count to the number who will actually play so the roster fills.
+
+### Karachi Coup (hidden-role bluffing)
+
+`KarachiCoup` is a Coup implementation (Malik Saab = Duke, Police Wala = Captain,
+Bhai = Assassin, Zardaar Chor = Ambassador, Mumma = Contessa) for 2–6 players.
+Two things make a bluffing game fit the serverless model:
+
+- **Honor-system secrecy.** Cards live in the (decodable) payload in plaintext;
+  the UI only reveals *your* hidden Connections. A determined player could decode
+  the bubble to peek — the accepted trade-off for having no server.
+- **Serialized challenge/block windows.** After an action, responders are polled
+  one at a time in seat order (Call Bakwaas / Use Setting / Let It Slide), so
+  there is always exactly one active player and no concurrent-insert forks. A
+  single Coup turn therefore spans several messages — inherent to async play.
+
+Flow: creator picks a player count → others tap **Join** until the roster fills →
+cards are dealt and play begins. Faithful-but-bounded simplifications: the first
+challenge concludes the challenge window (a survived claim is re-drawn), and a
+block may be challenged once. Cards are dealt by the last joiner's device, which
+transiently sees the shuffle (consistent with the honor-system model).
 
 ## Architecture
 
